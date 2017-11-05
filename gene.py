@@ -13,6 +13,8 @@ class Gene:
 		self.learning_rate = learning_rate
 		self.level = None
 
+				
+
 	def toStr( self ):
 		print( "gene: \ncbt: " + str( self.col_by_tree ) + " -- subs" + str( self.subsample )
 			+ " -- mcw" + str( self.min_child_weight ) + "--    max_depth: " + str( self.max_depth )
