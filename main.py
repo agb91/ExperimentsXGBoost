@@ -1,13 +1,14 @@
 from __future__ import division
 from gene import Gene
+import pandas as pd
 from geneCreator import GeneCreator
 from breeder import Breeder
 from titanic_boost import TitanicBoost
 
 if __name__ == "__main__":
   
-  population = 30
-  nGenerations = 25
+  population = 100
+  nGenerations = 15
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -41,6 +42,13 @@ if __name__ == "__main__":
   print("we reach with REGRESSORS a correctness percentage of: " + str( best.level) )
   print( best.toStr() )
 
+  runner.setGene( best )
+  runner.run( 0 )
+  test1 = runner.test_results
+  df_test = pd.DataFrame(data=test1)
+  print( test1 )
+  df_test.to_csv("test1.csv", sep='\t')
+
   #try classifiers
   print( "\n\n\n########################## CLASSIFIERS ##########################")
   generation = breeder.getFirstGeneration( population )
@@ -60,4 +68,11 @@ if __name__ == "__main__":
     
   print("we reach with CLASSIFIERS a correctness percentage of: " + str( best.level) )
   print( best.toStr() )
+
+  runner.setGene( best )
+  runner.run( 1 )
+  test1 = runner.test_results
+  df_test = pd.DataFrame(data=test1)
+  df_test.to_csv("test2.csv", sep='\t')
+
 
