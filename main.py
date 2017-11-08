@@ -7,8 +7,8 @@ from titanic_boost import TitanicBoost
 
 if __name__ == "__main__":
   
-  population = 100
-  nGenerations = 15
+  population = 30
+  nGenerations = 10
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -44,11 +44,11 @@ if __name__ == "__main__":
 
   runner.setGene( best )
   runner.run( 0 )
-  test1 = runner.test_results
-  df_test = pd.DataFrame(data=test1)
-  print( test1 )
-  df_test.to_csv("test1.csv", sep='\t')
+  df_test = runner.test_results
+  #print( df_test )
+  df_test.to_csv("toSubmit.csv", index=False)
 
+'''
   #try classifiers
   print( "\n\n\n########################## CLASSIFIERS ##########################")
   generation = breeder.getFirstGeneration( population )
@@ -71,8 +71,7 @@ if __name__ == "__main__":
 
   runner.setGene( best )
   runner.run( 1 )
-  test1 = runner.test_results
-  df_test = pd.DataFrame(data=test1)
-  df_test.to_csv("test2.csv", sep='\t')
-
+  df_test = runner.test_results
+  df_test.to_csv("test2.csv", index=False)
+'''
 

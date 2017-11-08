@@ -25,6 +25,7 @@ class TitanicBoost:
 		self.X_test = None
 		self.Y_test = None
 		self.test_results = None
+		self.X_output = None
 
 	def setGene( self, gene ):
 		self.col_by_tree = gene.col_by_tree
@@ -41,14 +42,22 @@ class TitanicBoost:
 			return 0
 
 	def extract_name(self , name):
-		part = name.split(',')[1].split('.')[0]
-		return part
+		part = name.split(',')[1].split('.')[0].strip()
+		#print("|" + str(part) + "| --- " + "Mr" + str( part == "Mr" ))
+		if( str(part) == "Mr" or str(part) == "Miss" or str(part) == "Mrs" or 
+			str(part) == "Master" ):
+			return 0
+		else:
+			return 1
+
 
 	def extract_ticket( self, ticket ):
-		ticket = str(ticket)[:1]
+		ticket = str(ticket)[:1].strip()
 		if( ticket.isdigit() ):
-			ticket = "z"
-		return ticket	
+			return 0
+		else:
+			return 1
+
 
 	def extract_age( self, age ):
 		#child
@@ -61,8 +70,50 @@ class TitanicBoost:
 		if( age >= 13 and age < 40 ):
 			return 1
 		#adult	
-		return 2		
+		return 2	
+
+	def manage_sex(self, train_valid):
+		train_valid['Sex'] = pd.Categorical.from_array(train_valid.Sex).codes
+		dummies_sex = pd.get_dummies( train_valid['Sex']  )
+		train_valid['Sex0'] = dummies_sex[dummies_sex.columns[0]] 
+		train_valid['Sex1'] = dummies_sex[dummies_sex.columns[1]] 
+		train_valid.drop('Sex', axis=1, inplace=True)
+		return train_valid		
 	
+	def get_cabin( self,x ):
+		val = str(x)[:1]
+		if( val == 'n' ):
+			return 0
+		else:
+			return 1	
+
+	def manage_cabin(self, train_valid):
+		train_valid['Cabin'] = train_valid['Cabin'].apply(lambda x: self.get_cabin(x) )
+		dummies_cabin = pd.get_dummies( train_valid['Cabin']  )
+		train_valid['Cabin0'] = dummies_cabin[dummies_cabin.columns[0]] 
+		train_valid['Cabin1'] = dummies_cabin[dummies_cabin.columns[1]] 
+		train_valid.drop('Cabin', axis=1, inplace=True)
+		return train_valid		
+		
+	def manage_name(self, train_valid):
+		train_valid['Name'] = train_valid['Name'].apply( lambda x: self.extract_name( x ) )
+		dummies_name = pd.get_dummies( train_valid['Name']  )
+		train_valid['Name0'] = dummies_name[dummies_name.columns[0]] 
+		train_valid['Name1'] = dummies_name[dummies_name.columns[1]] 
+		train_valid.drop('Name', axis=1, inplace=True)
+		return train_valid		
+
+	def manage_ticket( self, train_valid ):
+		train_valid['Ticket'] = train_valid['Ticket'].apply( lambda x: self.extract_ticket( x ) )
+		dummies_ticket = pd.get_dummies( train_valid['Ticket']  )
+		train_valid['Ticket0'] = dummies_ticket[dummies_ticket.columns[0]] 
+		train_valid['Ticket1'] = dummies_ticket[dummies_ticket.columns[1]] 
+		train_valid.drop('Ticket', axis=1, inplace=True)
+		return train_valid		
+		
+	def manage_age( self, train_valid ):
+		train_valid['Age'] = train_valid['Age'].apply( lambda x: self.extract_age( x ) )
+		return train_valid	
 
 	def manageDatasets(self):
 
@@ -75,40 +126,32 @@ class TitanicBoost:
 		CSV_COLUMNS = [ "PassengerId","Survived","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
 		CSV_COLUMNS_TEST = [ "PassengerId","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
 
+		CSV_OUTPUT = ["PassengerId"]
 
-
-		CSV_TRAIN = [ "Age","Fare","Sex", "Pclass","SibSp", "Parch", "Cabin", "Name", ]
+		CSV_TRAIN = [ "PassengerId", "Age","Fare","Sex0","Sex1", "Pclass","SibSp", "Parch", "Cabin0",
+			 "Cabin1", "Name0", "Name1"]
 		CSV_TARGET = ["Survived"]
 		
-		train_valid = shuffle(pd.read_csv( train_data, names=CSV_COLUMNS, header=1, skipinitialspace=True))
+		train_valid = shuffle(pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True))
 		train_valid = train_valid.groupby(train_valid.columns, axis = 1).transform(lambda x: x.fillna(x.mean()))
-		train_valid['Sex'] = pd.Categorical.from_array(train_valid.Sex).codes
-		train_valid['Cabin'] = train_valid['Cabin'].apply(lambda x: str(x)[:1])
-		train_valid['Cabin'] = pd.Categorical.from_array(train_valid.Cabin).codes
+		train_valid = self.manage_sex(train_valid)
+		train_valid = self.manage_cabin(train_valid)
+		train_valid = self.manage_name(train_valid)
+		train_valid = self.manage_ticket(train_valid)
+		train_valid = self.manage_age(train_valid)
 		
-		train_valid['Name'] = train_valid['Name'].apply( lambda x: self.extract_name( x ) )
-		train_valid['Name'] = pd.Categorical.from_array(train_valid.Name).codes
-		train_valid['Ticket'] = train_valid['Ticket'].apply( lambda x: self.extract_ticket( x ) )
-		train_valid['Ticket'] = pd.Categorical.from_array(train_valid.Ticket).codes
-
-		train_valid['Age'] = train_valid['Age'].apply( lambda x: self.extract_age( x ) )
-
 		data_len = len(train_valid)
 		dataset_train = train_valid[: math.ceil(data_len*2.0/3.0) ]
 		dataset_valid = train_valid[ - math.ceil(data_len/3.0) : ]
-		dataset_test = shuffle(pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=1, skipinitialspace=True))
+		dataset_test = pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True)
 		dataset_test = dataset_test.groupby(dataset_test.columns, axis = 1).transform(lambda x: x.fillna(x.mean()))
 
 		
-		dataset_test['Sex'] = pd.Categorical.from_array(dataset_test.Sex).codes
-		dataset_test['Cabin'] = dataset_test['Cabin'].apply(lambda x: str(x)[:1])
-		dataset_test['Cabin'] = pd.Categorical.from_array(dataset_test.Cabin).codes
-		dataset_test['Name'] = dataset_test['Name'].apply( lambda x: self.extract_name( x ) )
-		dataset_test['Name'] = pd.Categorical.from_array(dataset_test.Name).codes
-		dataset_test['Ticket'] = dataset_test['Ticket'].apply( lambda x: self.extract_ticket( x ) )
-		dataset_test['Ticket'] = pd.Categorical.from_array(dataset_test.Ticket).codes
-		dataset_test['Age'] = dataset_test['Age'].apply( lambda x: self.extract_age( x ) )
-		
+		dataset_test = self.manage_sex(dataset_test)
+		dataset_test = self.manage_cabin(dataset_test)
+		dataset_test = self.manage_name(dataset_test)
+		dataset_test = self.manage_ticket(dataset_test)
+		dataset_test = self.manage_age(dataset_test)
 
 		
 		self.X_train = dataset_train[ CSV_TRAIN ]
@@ -118,7 +161,7 @@ class TitanicBoost:
 		self.Y_valid = dataset_valid[ CSV_TARGET ].values.ravel()
 
 		self.X_test = dataset_test[ CSV_TRAIN ]
-		
+		self.X_output = dataset_test[ CSV_OUTPUT ]
 
 
 	def run( self, type ):
@@ -166,7 +209,9 @@ class TitanicBoost:
 		#print("\n\n ko is : " + str(ko) + ";       whilst ok is: " + str( ok )  )
 		percentage = (ok/(ok+ko))*100.0
 
-		self.test_results = y_pred_test
+		ids = self.X_test['PassengerId']
+		d = {'PassengerId': ids , 'Survived': y_pred_test}
+		self.test_results = pd.DataFrame(data=d)
 
 		return percentage
 
