@@ -9,7 +9,9 @@ from sklearn.utils import shuffle
 import xgboost as xgb
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
 
 class TitanicBoost:
 
@@ -26,14 +28,20 @@ class TitanicBoost:
 		self.Y_test = None
 		self.test_results = None
 		self.X_output = None
+		self.gbm = None
 
-	def setGene( self, gene ):
+	def set_gene_to_model( self, gene ):
 		self.col_by_tree = gene.col_by_tree
 		self.subsample = gene.subsample
 		self.min_child_weight = gene.min_child_weight
 		self.max_depth = gene.max_depth
 		self.n_estimators = gene.n_estimators
 		self.learning_rate = gene.learning_rate
+		self.gbm = xgb.XGBClassifier( colsample_bytree = self.col_by_tree, subsample = self.subsample, 
+				min_child_weight = self.min_child_weight , max_depth=self.max_depth, 
+				n_estimators=self.n_estimators,
+				learning_rate=self.learning_rate)
+
 		
 	def rounder( self, x , ts ):
 		if( x > ts ):
@@ -140,9 +148,6 @@ class TitanicBoost:
 		train_valid = self.manage_ticket(train_valid)
 		train_valid = self.manage_age(train_valid)
 		
-		data_len = len(train_valid)
-		dataset_train = train_valid[: math.ceil(data_len*2.0/3.0) ]
-		dataset_valid = train_valid[ - math.ceil(data_len/3.0) : ]
 		dataset_test = pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True)
 		dataset_test = dataset_test.groupby(dataset_test.columns, axis = 1).transform(lambda x: x.fillna(x.mean()))
 
@@ -153,67 +158,28 @@ class TitanicBoost:
 		dataset_test = self.manage_ticket(dataset_test)
 		dataset_test = self.manage_age(dataset_test)
 
-		
-		self.X_train = dataset_train[ CSV_TRAIN ]
-		self.Y_train = dataset_train[ CSV_TARGET ].values.ravel()
-
-		self.X_valid = dataset_valid[ CSV_TRAIN ]
-		self.Y_valid = dataset_valid[ CSV_TARGET ].values.ravel()
+		self.X = train_valid[ CSV_TRAIN ]
+		self.Y = train_valid[ CSV_TARGET ].values.ravel()
 
 		self.X_test = dataset_test[ CSV_TRAIN ]
 		self.X_output = dataset_test[ CSV_OUTPUT ]
 
+	def predict( self, type ):
+		y_pred_test = self.gbm.predict(self.X_test)
 
-	def run( self, type ):
-
-		
-		#print( Y_test )
-
-		#print (X_train)
-		if( type==0 ):
-			gbm = xgb.XGBRegressor( colsample_bytree = self.col_by_tree, subsample = self.subsample, 
-				min_child_weight = self.min_child_weight , max_depth=self.max_depth, 
-				n_estimators=self.n_estimators,
-				learning_rate=self.learning_rate).fit(self.X_train, self.Y_train)
-		
-		if( type==1 ):
-			gbm = xgb.XGBClassifier( colsample_bytree = self.col_by_tree, subsample = self.subsample, 
-				min_child_weight = self.min_child_weight , max_depth=self.max_depth, 
-				n_estimators=self.n_estimators,
-				learning_rate=self.learning_rate).fit(self.X_train, self.Y_train)
-		
-
-
-		y_pred = gbm.predict(self.X_valid)
-		y_pred_test = gbm.predict(self.X_test)
-
-		y_pred = list( map( lambda p: self.rounder(p, 0.5) , y_pred ) )
 		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
-
-		#print( y_pred )
-
-
-		ko = 0
-		ok = 0
-
-
-		for i in range( 0, len(self.Y_valid) ):
-			if(y_pred[i] != self.Y_valid[i]):
-				#print( "KO    )      " + str(y_pred[i]) +  "  - not equal - " + str(Y_test[i]) )
-				ko += 1
-			else:
-				#print( "OOOOOOK    )      " + str(y_pred[i]) +  "  - equal - " + str(Y_test[i]) )
-				ok +=1
-
-
-		#print("\n\n ko is : " + str(ko) + ";       whilst ok is: " + str( ok )  )
-		percentage = (ok/(ok+ko))*100.0
 
 		ids = self.X_test['PassengerId']
 		d = {'PassengerId': ids , 'Survived': y_pred_test}
 		self.test_results = pd.DataFrame(data=d)
 
-		return percentage
+	def run( self ):
+
+		
+		kfold = StratifiedKFold(n_splits=10, random_state=7)
+		results = cross_val_score( self.gbm, self.X, self.Y, cv=kfold)
+	
+		return results.mean()
 
 
 

@@ -54,14 +54,14 @@ class Breeder:
 		
 		return son	
 
-	def run(self, generation, verbose, type , runner):
+	def run(self, generation, runner):
 		runnedGeneration = list()
 		
 		for i in range( 0 , len(generation)):
 			thisGene = generation[i]
 			tb = runner
-			tb.setGene( thisGene )
-			thisGene.setFitnessLevel( tb.run(type) ) 
+			tb.set_gene_to_model( thisGene )
+			thisGene.setFitnessLevel( tb.run() ) 
 			runnedGeneration.append(thisGene)
 		return runnedGeneration	
 
