@@ -6,6 +6,7 @@ import numpy as np
 import random
 import math
 from dataReader import DataReader
+from various_forests import VariousForests
 
 
 class Breeder:
@@ -52,7 +53,10 @@ class Breeder:
 		lri = random.randint(0, (len(parents) - 1 ))
 		lr = parents[lri].learning_rate 
 
-		son = Gene( cbt, ss, mcw, md, ne, lr )
+		wayi = random.randint(0, (len(parents) - 1 ))
+		way = parents[wayi].way
+
+		son = Gene( cbt, ss, mcw, md, ne, lr, way )
 		
 		return son	
 
@@ -69,6 +73,9 @@ class Breeder:
 				runner = TitanicBoostClassifier()
 			if( thisGene.way == 1 ):
 				runner = TitanicBoostRegressor()
+			if( thisGene.way == 2 ):
+				runner = VariousForests()	
+
 			runner.setDatasets( X , Y , X_test , X_output )
 			runner.set_gene_to_model( thisGene )
 			thisGene.setFitnessLevel( runner.run() ) 

@@ -5,12 +5,13 @@ from geneCreator import GeneCreator
 from breeder import Breeder
 from titanic_boost_regressor import TitanicBoostRegressor
 from titanic_boost_classifier import TitanicBoostClassifier
+from various_forests import VariousForests
 from dataReader import DataReader
 
 if __name__ == "__main__":
   
-  population = 6
-  nGenerations = 4
+  population = 20
+  nGenerations = 5
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -40,7 +41,7 @@ if __name__ == "__main__":
   #loss = nn.run()
   print( "\n\n\n########################## IN THE END ##########################")
     
-  print("we reach with CLASSIFIERS a correctness percentage of: " + str( best.level) )
+  print("we reach a correctness percentage of: " + str( best.level) )
   print( best.toStr() )
 
 
@@ -49,8 +50,12 @@ if __name__ == "__main__":
     runner = TitanicBoostClassifier()
   if( best.way == 1 ):
     runner = TitanicBoostRegressor()
+  if( best.way == 2 ):
+    runner = VariousForests()  
+  
   runner.setDatasets(X , Y , X_test , X_output)
   runner.set_gene_to_model( best )
+  runner.run()
   runner.predict()
   df_test = runner.test_results
 

@@ -37,6 +37,12 @@ class DataReader:
 		else:
 			return ticket
 
+	def extract_crew( self, fare ):
+		if( float (fare) == 0.0  ):
+			return 1
+		else:
+			return 0			
+
 
 	def extract_age( self, age ):
 		return age	
@@ -72,6 +78,10 @@ class DataReader:
 	def manage_embarked( self, train_valid ):
 		train_valid = pd.get_dummies(train_valid, columns = ["Embarked"])
 		return train_valid
+
+	def manage_crew( self, train_valid ):
+		train_valid['Crew'] = train_valid['Fare'].apply( lambda x: self.extract_crew( x ) )
+		return train_valid	
 		
 
 	def readData(self):
@@ -93,19 +103,23 @@ class DataReader:
 		
 		global_dataset = pd.concat( [train_valid, dataset_test] )
 
-
 		global_dataset = self.manage_sex(global_dataset)
 		global_dataset = self.manage_cabin(global_dataset)
 		global_dataset = self.manage_name(global_dataset)
 		global_dataset = self.manage_ticket(global_dataset)
 		global_dataset = self.manage_age(global_dataset)
 		global_dataset = self.manage_embarked( global_dataset )
+		global_dataset = self.manage_crew( global_dataset )
 
 
-	
+		global_dataset = global_dataset.groupby(global_dataset.columns, axis = 1).transform(
+			lambda x: x.fillna(x.median()))
+
+		global_dataset["Age"] = global_dataset["Age"].fillna( global_dataset["Age"].mean() )
 		Y = train_valid[ CSV_TARGET ].values.ravel()
 
 		X = global_dataset.head( 891 )
+
 		X.drop("Survived", axis=1, inplace=True)
 		
 		X_test = global_dataset.tail( 418 )
