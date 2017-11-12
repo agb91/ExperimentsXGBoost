@@ -3,12 +3,12 @@ from gene import Gene
 import pandas as pd
 from geneCreator import GeneCreator
 from breeder import Breeder
-from titanic_boost import TitanicBoost
+from titanic_boost_regressor import TitanicBoostRegressor
 
 if __name__ == "__main__":
   
-  population = 14
-  nGenerations = 6
+  population = 6
+  nGenerations = 4
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -17,7 +17,7 @@ if __name__ == "__main__":
   #try regressors
   print( "\n\n\n########################## CLASSIFIERS ##########################")
   generation = breeder.getFirstGeneration( population )
-  runner = TitanicBoost()
+  runner = TitanicBoostRegressor()
   runner.manageDatasets()
   generation = breeder.run( generation , runner)
 
@@ -46,4 +46,5 @@ if __name__ == "__main__":
   runner.predict()
   df_test = runner.test_results
 
+  print( "Ok, now I write the result;" )
   df_test.to_csv("toSubmit.csv", index=False)

@@ -1,6 +1,6 @@
 from gene import Gene
 from geneCreator import GeneCreator
-from titanic_boost import TitanicBoost
+from titanic_boost_regressor import TitanicBoostRegressor
 import numpy as np
 import random
 import math

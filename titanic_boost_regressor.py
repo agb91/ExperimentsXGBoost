@@ -12,8 +12,9 @@ import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_predict
 
-class TitanicBoost:
+class TitanicBoostRegressor:
 
 	def __init__( self  ):
 		self.col_by_tree = None
@@ -37,9 +38,9 @@ class TitanicBoost:
 		self.max_depth = gene.max_depth
 		self.n_estimators = gene.n_estimators
 		self.learning_rate = gene.learning_rate
-		self.gbm = xgb.XGBClassifier( colsample_bytree = self.col_by_tree, subsample = self.subsample, 
+		self.gbm = xgb.XGBRegressor( colsample_bytree = self.col_by_tree, subsample = self.subsample, 
 				min_child_weight = self.min_child_weight , max_depth=self.max_depth, 
-				n_estimators=self.n_estimators,
+				n_estimators=self.n_estimators, objective="binary:logistic" ,
 				learning_rate=self.learning_rate)
 
 		
@@ -53,10 +54,11 @@ class TitanicBoost:
 		part = name.split(',')[1].split('.')[0].strip()
 		#print("|" + str(part) + "| --- " + "Mr" + str( part == "Mr" ))
 		if( str(part) == "Mr" or str(part) == "Miss" or str(part) == "Mrs" or 
+			str(part) == "Mme" or str(part) == "Mlle" or str(part) == "Ms" or
 			str(part) == "Master" ):
 			return 0
 		else:
-			return 1
+			return part
 
 
 	def extract_ticket( self, ticket ):
@@ -64,64 +66,44 @@ class TitanicBoost:
 		if( ticket.isdigit() ):
 			return 0
 		else:
-			return 1
+			return ticket
 
 
 	def extract_age( self, age ):
-		#child
-		if( age < 13 ):
-			return 0
-		#elder	
-		if( age > 60):
-			return 3		
-		#young	
-		if( age >= 13 and age < 40 ):
-			return 1
-		#adult	
-		return 2	
+		return age	
+
+	def get_cabin( self,x ):
+		val = str(x)[:1]
+		return val	
 
 	def manage_sex(self, train_valid):
 		train_valid['Sex'] = pd.Categorical.from_array(train_valid.Sex).codes
-		dummies_sex = pd.get_dummies( train_valid['Sex']  )
-		train_valid['Sex0'] = dummies_sex[dummies_sex.columns[0]] 
-		train_valid['Sex1'] = dummies_sex[dummies_sex.columns[1]] 
-		train_valid.drop('Sex', axis=1, inplace=True)
+		train_valid = pd.get_dummies(train_valid, columns = ["Sex"])
 		return train_valid		
 	
-	def get_cabin( self,x ):
-		val = str(x)[:1]
-		if( val == 'n' ):
-			return 0
-		else:
-			return 1	
-
 	def manage_cabin(self, train_valid):
 		train_valid['Cabin'] = train_valid['Cabin'].apply(lambda x: self.get_cabin(x) )
-		dummies_cabin = pd.get_dummies( train_valid['Cabin']  )
-		train_valid['Cabin0'] = dummies_cabin[dummies_cabin.columns[0]] 
-		train_valid['Cabin1'] = dummies_cabin[dummies_cabin.columns[1]] 
-		train_valid.drop('Cabin', axis=1, inplace=True)
+		train_valid = pd.get_dummies(train_valid, columns = ["Cabin"])
 		return train_valid		
 		
 	def manage_name(self, train_valid):
 		train_valid['Name'] = train_valid['Name'].apply( lambda x: self.extract_name( x ) )
-		dummies_name = pd.get_dummies( train_valid['Name']  )
-		train_valid['Name0'] = dummies_name[dummies_name.columns[0]] 
-		train_valid['Name1'] = dummies_name[dummies_name.columns[1]] 
-		train_valid.drop('Name', axis=1, inplace=True)
+		train_valid = pd.get_dummies(train_valid, columns = ["Name"])
 		return train_valid		
 
 	def manage_ticket( self, train_valid ):
 		train_valid['Ticket'] = train_valid['Ticket'].apply( lambda x: self.extract_ticket( x ) )
-		dummies_ticket = pd.get_dummies( train_valid['Ticket']  )
-		train_valid['Ticket0'] = dummies_ticket[dummies_ticket.columns[0]] 
-		train_valid['Ticket1'] = dummies_ticket[dummies_ticket.columns[1]] 
-		train_valid.drop('Ticket', axis=1, inplace=True)
+		train_valid = pd.get_dummies(train_valid, columns = ["Ticket"])
 		return train_valid		
 		
 	def manage_age( self, train_valid ):
 		train_valid['Age'] = train_valid['Age'].apply( lambda x: self.extract_age( x ) )
-		return train_valid	
+		return train_valid
+
+	def manage_embarked( self, train_valid ):
+		train_valid = pd.get_dummies(train_valid, columns = ["Embarked"])
+		return train_valid
+				
 
 	def manageDatasets(self):
 
@@ -136,35 +118,36 @@ class TitanicBoost:
 
 		CSV_OUTPUT = ["PassengerId"]
 
-		CSV_TRAIN = [ "PassengerId", "Age","Fare","Sex0","Sex1", "Pclass","SibSp", "Parch", "Cabin0",
-			 "Cabin1", "Name0", "Name1"]
 		CSV_TARGET = ["Survived"]
 		
-		train_valid = shuffle(pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True))
-		train_valid = train_valid.groupby(train_valid.columns, axis = 1).transform(lambda x: x.fillna(x.mean()))
-		train_valid = self.manage_sex(train_valid)
-		train_valid = self.manage_cabin(train_valid)
-		train_valid = self.manage_name(train_valid)
-		train_valid = self.manage_ticket(train_valid)
-		train_valid = self.manage_age(train_valid)
-		
+		train_valid = pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True)
 		dataset_test = pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True)
-		dataset_test = dataset_test.groupby(dataset_test.columns, axis = 1).transform(lambda x: x.fillna(x.mean()))
-
 		
-		dataset_test = self.manage_sex(dataset_test)
-		dataset_test = self.manage_cabin(dataset_test)
-		dataset_test = self.manage_name(dataset_test)
-		dataset_test = self.manage_ticket(dataset_test)
-		dataset_test = self.manage_age(dataset_test)
+		global_dataset = pd.concat( [train_valid, dataset_test] )
 
-		self.X = train_valid[ CSV_TRAIN ]
+
+		global_dataset = self.manage_sex(global_dataset)
+		global_dataset = self.manage_cabin(global_dataset)
+		global_dataset = self.manage_name(global_dataset)
+		global_dataset = self.manage_ticket(global_dataset)
+		global_dataset = self.manage_age(global_dataset)
+		global_dataset = self.manage_embarked( global_dataset )
+
+
+	
 		self.Y = train_valid[ CSV_TARGET ].values.ravel()
 
-		self.X_test = dataset_test[ CSV_TRAIN ]
-		self.X_output = dataset_test[ CSV_OUTPUT ]
+		self.X = global_dataset.head( 891 )
+		self.X.drop("Survived", axis=1, inplace=True)
+		
+		self.X_test = global_dataset.tail( 418 )
+		self.X_test.drop("Survived", axis=1, inplace=True)
+		self.X_output = self.X_test[ CSV_OUTPUT ]
+		
 
-	def predict( self, type ):
+	def predict( self ):
+		
+		self.gbm.fit(self.X, self.Y)
 		y_pred_test = self.gbm.predict(self.X_test)
 
 		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
@@ -174,12 +157,21 @@ class TitanicBoost:
 		self.test_results = pd.DataFrame(data=d)
 
 	def run( self ):
+		kfold = StratifiedKFold(n_splits=5, random_state=7)
+		y_pred = cross_val_predict( self.gbm, self.X, self.Y, cv=kfold)
 
-		
-		kfold = StratifiedKFold(n_splits=10, random_state=7)
-		results = cross_val_score( self.gbm, self.X, self.Y, cv=kfold)
-	
-		return results.mean()
+		y_pred = list( map( lambda p: self.rounder(p, 0.5) , y_pred ) )
+
+		ok = 0
+		ko = 0
+		for i in range(0, len(y_pred) ):
+			if(y_pred[i] == self.Y[i]):
+				ok += 1
+			else:
+				ko +=1	
+
+
+		return (ok / (ok + ko) )
 
 
 
