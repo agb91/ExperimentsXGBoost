@@ -1,9 +1,11 @@
 from gene import Gene
 from geneCreator import GeneCreator
 from titanic_boost_regressor import TitanicBoostRegressor
+from titanic_boost_classifier import TitanicBoostClassifier
 import numpy as np
 import random
 import math
+from dataReader import DataReader
 
 
 class Breeder:
@@ -54,14 +56,22 @@ class Breeder:
 		
 		return son	
 
-	def run(self, generation, runner):
+	def run(self, generation):
 		runnedGeneration = list()
+		dataReader = DataReader()
+		X,Y,X_test,X_output = dataReader.readData()
+
 		
 		for i in range( 0 , len(generation)):
 			thisGene = generation[i]
-			tb = runner
-			tb.set_gene_to_model( thisGene )
-			thisGene.setFitnessLevel( tb.run() ) 
+			runner = None	
+			if( thisGene.way == 0 ):
+				runner = TitanicBoostClassifier()
+			if( thisGene.way == 1 ):
+				runner = TitanicBoostRegressor()
+			runner.setDatasets( X , Y , X_test , X_output )
+			runner.set_gene_to_model( thisGene )
+			thisGene.setFitnessLevel( runner.run() ) 
 			runnedGeneration.append(thisGene)
 		return runnedGeneration	
 

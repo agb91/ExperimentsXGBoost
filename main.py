@@ -4,6 +4,8 @@ import pandas as pd
 from geneCreator import GeneCreator
 from breeder import Breeder
 from titanic_boost_regressor import TitanicBoostRegressor
+from titanic_boost_classifier import TitanicBoostClassifier
+from dataReader import DataReader
 
 if __name__ == "__main__":
   
@@ -12,19 +14,18 @@ if __name__ == "__main__":
 
   creator = GeneCreator()
   breeder = Breeder()
-  
+  dataReader = DataReader()
+  X,Y,X_test,X_output = dataReader.readData()
 
   #try regressors
-  print( "\n\n\n########################## CLASSIFIERS ##########################")
+  print( "\n\n\n########################## TRY! ##########################")
   generation = breeder.getFirstGeneration( population )
-  runner = TitanicBoostRegressor()
-  runner.manageDatasets()
-  generation = breeder.run( generation , runner)
+  generation = breeder.run( generation )
 
   for i in range ( 0 , nGenerations ):
     print( "\n\n\n########################## GENERATION: " + str(i) + " ##########################")
     generation = breeder.getNewGeneration(generation , population)
-    generation = breeder.run( generation , runner)
+    generation = breeder.run( generation )
     #print( "gen lenght: " + str(len(generation)) )
     best = breeder.takeBest( generation )
     #best.toStr()
@@ -42,6 +43,13 @@ if __name__ == "__main__":
   print("we reach with CLASSIFIERS a correctness percentage of: " + str( best.level) )
   print( best.toStr() )
 
+
+  runner = None 
+  if( best.way == 0 ):
+    runner = TitanicBoostClassifier()
+  if( best.way == 1 ):
+    runner = TitanicBoostRegressor()
+  runner.setDatasets(X , Y , X_test , X_output)
   runner.set_gene_to_model( best )
   runner.predict()
   df_test = runner.test_results
