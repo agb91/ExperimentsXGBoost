@@ -51,7 +51,7 @@ class VariousForests:
 
 	def run( self ):
 		random_state = 2
-		kfold = StratifiedKFold(n_splits=5, random_state=random_state)
+		kfold = StratifiedKFold(n_splits=10)
 
 		if( self.way == 2 ):
 			self.runner = SVC(random_state=random_state)
@@ -78,7 +78,10 @@ class VariousForests:
 			self.runner = RandomForestClassifier(random_state=random_state, n_estimators= nest,
 				max_depth = self.max_depth, )
 		
-	
+		#or the more basic:
+		if( self.way == 8 ):
+			self.runner = RandomForestClassifier( n_estimators=100 )
+
 		results = cross_val_score( self.runner, self.X, self.Y, scoring = "accuracy", 
 				cv = kfold)
 		thisResult = results.mean()
