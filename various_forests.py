@@ -44,14 +44,14 @@ class VariousForests:
 		self.runner.fit(self.X, self.Y)
 		y_pred_test = self.bestRunner.predict(self.X_test)
 
-		ids = self.X_test['PassengerId']
+		ids = self.X_output['PassengerId']
 		d = {'PassengerId': ids , 'Survived': y_pred_test}
 		self.test_results = pd.DataFrame(data=d)
 
 
 	def run( self ):
 		random_state = 2
-		kfold = StratifiedKFold(n_splits=10)
+		kfold = StratifiedKFold(n_splits=5)
 
 		if( self.way == 2 ):
 			self.runner = SVC(random_state=random_state)

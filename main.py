@@ -10,8 +10,8 @@ from dataReader import DataReader
 
 if __name__ == "__main__":
   
-  population = 18
-  nGenerations = 4
+  population = 40
+  nGenerations = 3
 
   creator = GeneCreator()
   breeder = Breeder()

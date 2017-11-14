@@ -63,12 +63,12 @@ class TitanicBoostRegressor:
 
 		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
 
-		ids = self.X_test['PassengerId']
+		ids = self.X_output['PassengerId']
 		d = {'PassengerId': ids , 'Survived': y_pred_test}
 		self.test_results = pd.DataFrame(data=d)
 
 	def run( self ):
-		kfold = StratifiedKFold(n_splits=10)
+		kfold = StratifiedKFold(n_splits=5)
 		y_pred = cross_val_predict( self.gbm, self.X, self.Y, cv=kfold)
 
 		y_pred = list( map( lambda p: self.rounder(p, 0.5) , y_pred ) )
@@ -83,7 +83,6 @@ class TitanicBoostRegressor:
 
 
 		return (ok / (ok + ko) )
-
-
+		
 
 

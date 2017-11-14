@@ -96,8 +96,7 @@ class DataReader:
 			return 5		
 		return sibsp	
 
-	def extract_alone( self, parch, sibsp ):
-		family = int(parch) + int(sibsp)
+	def extract_alone( self, family ):
 		if( family == 0):
 			return 1
 		else:
@@ -153,7 +152,9 @@ class DataReader:
 		return train_valid	
 
 	def manage_is_alone( self, train_valid ):
-		train_valid['Alone'] = train_valid[['Parch' ,'SibSp']].apply( lambda x,y: self.extract_alone( x,y ) )	
+		train_valid['Alone'] = train_valid['Parch'] + train_valid['SibSp']	
+		train_valid['Alone'] = train_valid['Alone'].apply( lambda x: self.extract_alone( x ) )
+		return train_valid
 
 	def readData(self):
 		le = LabelEncoder()
@@ -192,7 +193,7 @@ class DataReader:
 		global_dataset["Age"] = global_dataset["Age"].fillna( global_dataset["Age"].mean() )
 		Y = train_valid[ CSV_TARGET ].values.ravel()
 
-		print( global_dataset.columns.values )
+		#print( global_dataset.columns.values )
 
 		X = global_dataset.head( 891 )
 		X.drop("PassengerId", axis=1, inplace=True)
