@@ -8,7 +8,7 @@ class GeneCreator:
 		return ( result )
 
 	def randomWay( self ):
-		return ( random.randint(0,2) )
+		return ( random.randint(0,7) )
 
 	def randomSample(self):
 		result = (random.random() / 2) + 0.5  # I wanna something in 0.5 - 1
@@ -20,13 +20,13 @@ class GeneCreator:
 
 
 	def randomEstimators(self):
-		return ( random.randint(1,1000) )
+		return ( random.randint(1,1500) )
 	
 	def randomDepthWeight(self):
-		return ( random.randint(3,15) )
+		return ( random.randint(3,30) )
 
 	def randomChildWeight(self):
-		return ( random.randint(1,8) )	
+		return ( random.randint(1,15) )	
 
 	def randomCreate(self):
 		
@@ -37,8 +37,8 @@ class GeneCreator:
 		n_estimators = self.randomEstimators()
 		learning_rate = self.randomLearning()
 		way = self.randomWay()
-		
+		n_neighbors = self.randomChildWeight()	
 		gene = Gene( col_by_tree, subsample, min_child_weight, max_depth, n_estimators, 
-			learning_rate , way)
+			learning_rate , way, n_neighbors)
 		return gene 	
 	

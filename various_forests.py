@@ -25,14 +25,23 @@ class VariousForests:
 		self.X_test = X_test
 		self.X_output = X_output
 		self.test_results = None
-		self.bestRunner = None
-
+		self.way = None
+		self.gene = None
+		self.runner = None
+	
 	def set_gene_to_model( self, gene ):
-		pass	
+		self.way = gene.way
+		self.max_depth = gene.max_depth
+		self.subsample = gene.subsample
+		self.learning_rate = gene.learning_rate
+		self.n_estimators = gene.n_estimators
+		self.n_neighbors = gene.n_neighbors
+		self.gene = gene
+
 
 	def predict( self ):
 		
-		self.bestRunner.fit(self.X, self.Y)
+		self.runner.fit(self.X, self.Y)
 		y_pred_test = self.bestRunner.predict(self.X_test)
 
 		ids = self.X_test['PassengerId']
@@ -44,34 +53,37 @@ class VariousForests:
 		random_state = 2
 		kfold = StratifiedKFold(n_splits=5, random_state=random_state)
 
-		names_cl = list()
-		classifiers = list()
-		classifiers.append(SVC(random_state=random_state))
-		names_cl.append( "SVC" )
-		classifiers.append(DecisionTreeClassifier(random_state=random_state))
-		names_cl.append("DecisionTree")
-		classifiers.append(AdaBoostClassifier(DecisionTreeClassifier(random_state=random_state),random_state=random_state,learning_rate=0.1))
-		names_cl.append("AdaBoost")
-		classifiers.append(RandomForestClassifier(random_state=random_state))
-		names_cl.append("RandomForest")
-		classifiers.append(GradientBoostingClassifier(random_state=random_state))
-		names_cl.append("GradientBoosting")
-		classifiers.append(KNeighborsClassifier())
-		names_cl.append("KNeighbors")
+		if( self.way == 2 ):
+			self.runner = SVC(random_state=random_state)
+		
+		if( self.way == 3 ):
+			self.runner = DecisionTreeClassifier(max_depth = self.max_depth, random_state=random_state)
+		
+		if( self.way == 4 ):
+			self.runner = AdaBoostClassifier(DecisionTreeClassifier(random_state=random_state),
+				random_state=random_state, learning_rate=(float(self.learning_rate)*5.0), 
+				n_estimators = self.n_estimators)
+		
+		if( self.way == 5 ):
+			self.runner = GradientBoostingClassifier(random_state=random_state, 
+				learning_rate = self.learning_rate, n_estimators = self.n_estimators 
+				,max_depth = self.max_depth, subsample = self.subsample )
+		
+		if( self.way == 6 ):
+			self.runner = KNeighborsClassifier( n_neighbors = self.n_neighbors )
+
+
+		if( self.way == 7 ):
+			nest = int( float(self.n_estimators) / 10.0 )
+			self.runner = RandomForestClassifier(random_state=random_state, n_estimators= nest,
+				max_depth = self.max_depth, )
+		
 	
-		cv_results = []
-		bestResult = 0.0
-		bestName = None
-		for i in range(0, len( classifiers ) ) :
-			results = cross_val_score(classifiers[i], self.X, self.Y, scoring = "accuracy", 
+		results = cross_val_score( self.runner, self.X, self.Y, scoring = "accuracy", 
 				cv = kfold)
-			thisResult = results.mean()
-			thisName = names_cl[i]
-			if( thisResult > bestResult):
-				bestResult = thisResult
-				bestName = thisName
-				self.bestRunner = classifiers[i]
-		return bestResult
+		thisResult = results.mean()
+		
+		return thisResult
 
 
 

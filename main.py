@@ -10,8 +10,8 @@ from dataReader import DataReader
 
 if __name__ == "__main__":
   
-  population = 20
-  nGenerations = 5
+  population = 30
+  nGenerations = 8
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -45,7 +45,7 @@ if __name__ == "__main__":
   print( best.toStr() )
 
 
-  runner = None 
+  runner = TitanicBoostClassifier() # just to initialize 
   if( best.way == 0 ):
     runner = TitanicBoostClassifier()
   if( best.way == 1 ):

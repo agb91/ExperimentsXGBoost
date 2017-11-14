@@ -68,7 +68,7 @@ class Breeder:
 		
 		for i in range( 0 , len(generation)):
 			thisGene = generation[i]
-			runner = None	
+			runner = TitanicBoostClassifier()	#just to initialize...
 			if( thisGene.way == 0 ):
 				runner = TitanicBoostClassifier()
 			if( thisGene.way == 1 ):
