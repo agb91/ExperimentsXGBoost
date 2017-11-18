@@ -12,6 +12,7 @@ import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_predict
 
 class DataReader:
@@ -156,6 +157,19 @@ class DataReader:
 		train_valid['Alone'] = train_valid['Alone'].apply( lambda x: self.extract_alone( x ) )
 		return train_valid
 
+	def get_features( self,X,Y,n_features ):
+		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
+		clf = clf.fit( X, Y )
+
+		features = pd.DataFrame()
+		features['feature'] = X.columns
+		features['importance'] = clf.feature_importances_
+
+		features.sort_values(by=['importance'], ascending=False, inplace=True)
+		features = features.head( n = n_features )
+
+		return features["feature"]
+
 	def readData(self):
 		le = LabelEncoder()
 		
@@ -170,8 +184,8 @@ class DataReader:
 
 		CSV_TARGET = ["Survived"]
 		
-		train_valid = pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True)
-		dataset_test = pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True)
+		train_valid = shuffle( pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True) )
+		dataset_test = shuffle( pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True) )
 		
 		global_dataset = pd.concat( [train_valid, dataset_test] )
 
@@ -185,6 +199,7 @@ class DataReader:
 		global_dataset = self.manage_is_alone( global_dataset )
 		global_dataset = self.manage_parch( global_dataset )
 		global_dataset = self.manage_sibsp( global_dataset )
+
 
 
 		global_dataset = global_dataset.groupby(global_dataset.columns, axis = 1).transform(
@@ -205,6 +220,9 @@ class DataReader:
 		X_output = X_test[ CSV_OUTPUT ]
 		X_test.drop("PassengerId", axis=1, inplace=True)
 		
+		features = self.get_features( X , Y , 12)
+		X = X[ features ]
+		X_test = X_test[features]
 		return X,Y,X_test,X_output
 		
 

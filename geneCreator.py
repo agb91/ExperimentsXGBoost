@@ -20,13 +20,13 @@ class GeneCreator:
 
 
 	def randomEstimators(self):
-		return ( random.randint(1,2000) )
+		return ( random.randint(1,1000) )
 	
 	def randomDepthWeight(self):
-		return ( random.randint(3,30) )
+		return ( random.randint(3,7) )
 
 	def randomChildWeight(self):
-		return ( random.randint(1,15) )	
+		return ( random.randint(1,8) )	
 
 	def randomCreate(self):
 		

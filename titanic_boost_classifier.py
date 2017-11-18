@@ -13,6 +13,7 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import RepeatedKFold
 
 class TitanicBoostClassifier:
 
@@ -60,7 +61,7 @@ class TitanicBoostClassifier:
 		
 
 	def predict( self ):
-		
+		print( "boost classifier, I'm predicting" )
 		self.gbm.fit(self.X, self.Y)
 		y_pred_test = self.gbm.predict(self.X_test)
 
@@ -69,10 +70,21 @@ class TitanicBoostClassifier:
 		self.test_results = pd.DataFrame(data=d)
 
 	def run( self ):
-		kfold = StratifiedKFold(n_splits=5)
-		results = cross_val_score( self.gbm, self.X, self.Y, cv=kfold, scoring='accuracy')
 
-		return results.mean()
+		#kfold = RepeatedKFold(n_splits=3, n_repeats=5)
+		
+		#results = cross_val_score( self.gbm, self.X[:200], self.Y[:200], 
+		#	cv=kfold, scoring='accuracy')
+
+
+		self.gbm.fit(self.X[:200], self.Y[:200])
+
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		y_real = self.Y[-200:]
+	
+
+		return (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
 
 
 

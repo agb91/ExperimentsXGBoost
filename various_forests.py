@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
-
+from sklearn.model_selection import RepeatedKFold
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier, VotingClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import LogisticRegression
@@ -40,9 +40,9 @@ class VariousForests:
 
 
 	def predict( self ):
-		
+		print( "some forest, I'm predicting" )
 		self.runner.fit(self.X, self.Y)
-		y_pred_test = self.bestRunner.predict(self.X_test)
+		y_pred_test = self.runner.predict(self.X_test)
 
 		ids = self.X_output['PassengerId']
 		d = {'PassengerId': ids , 'Survived': y_pred_test}
@@ -51,8 +51,7 @@ class VariousForests:
 
 	def run( self ):
 		random_state = 2
-		kfold = StratifiedKFold(n_splits=5)
-
+		#kfold = StratifiedKFold(n_splits=5)
 		if( self.way == 2 ):
 			self.runner = SVC(random_state=random_state)
 		
@@ -82,11 +81,23 @@ class VariousForests:
 		if( self.way == 8 ):
 			self.runner = RandomForestClassifier( n_estimators=100 )
 
-		results = cross_val_score( self.runner, self.X, self.Y, scoring = "accuracy", 
-				cv = kfold)
-		thisResult = results.mean()
+		#kfold = RepeatedKFold(n_splits=3, n_repeats=5)
 		
-		return thisResult
+		#results = cross_val_score( self.runner, self.X[:200], self.Y[:200],
+		#	 scoring = "accuracy", 
+		#		cv = kfold)
+		#thisResult = results.mean() 
+		
+		self.runner.fit(self.X[:200], self.Y[:200])
+
+		y_pred_test = self.runner.predict(self.X[-200:])
+		y_real = self.Y[-200:]
+
+		#print( results )
+		return (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
+
+		#return thisResult
 
 
 

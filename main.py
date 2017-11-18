@@ -8,15 +8,18 @@ from titanic_boost_classifier import TitanicBoostClassifier
 from various_forests import VariousForests
 from dataReader import DataReader
 
+
 if __name__ == "__main__":
   
-  population = 40
-  nGenerations = 3
+  population = 30
+  nGenerations = 6
 
   creator = GeneCreator()
   breeder = Breeder()
   dataReader = DataReader()
   X,Y,X_test,X_output = dataReader.readData()
+
+  #print( X.head() )
 
   #try regressors
   print( "\n\n\n########################## TRY! ##########################")
@@ -41,17 +44,22 @@ if __name__ == "__main__":
   #loss = nn.run()
   print( "\n\n\n########################## IN THE END ##########################")
     
-  print("we reach a correctness percentage of: " + str( best.level) )
+  print("we reach a correctness percentage of: " + str( best.level) + 
+    " using way: " + str( best.level ))
   print( best.toStr() )
 
 
   runner = TitanicBoostClassifier() # just to initialize 
   if( best.way == 0 ):
+    print(" to predict I set boost classifier ")
     runner = TitanicBoostClassifier()
-  if( best.way == 1 ):
-    runner = TitanicBoostRegressor()
-  if( best.way == 2 ):
-    runner = VariousForests()  
+  else:
+    if( best.way == 1 ):
+      print(" to predict I set boost Regressor ")
+      runner = TitanicBoostRegressor()
+    else:
+      print( "to predict I set some forests, number: " + str(best.way) )
+      runner = VariousForests()  
   
   runner.setDatasets(X , Y , X_test , X_output)
   runner.set_gene_to_model( best )
