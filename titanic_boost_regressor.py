@@ -69,25 +69,32 @@ class TitanicBoostRegressor:
 
 	def run( self ):
 		values = list()
-		'''
-		for iteration in range( 0,5 ):
-			kfold = StratifiedKFold( n_splits=5, shuffle = True )
-			y_pred = cross_val_predict( self.gbm, self.X, self.Y, cv=kfold)
 
-			y_pred = list( map( lambda p: self.rounder(p, 0.5) , y_pred ) )
+		self.gbm.fit(self.X[:200], self.Y[:200])
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
+		y_real = self.Y[-200:]
+		r1 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
 
-			ok = 0
-			ko = 0
-			for i in range(0, len(y_pred) ):
-				if(y_pred[i] == self.Y[i]):
-					ok += 1
-				else:
-					ko +=1
-			thisResult = (ok / (ok + ko) )			
-			values.append( thisResult )		
-		'''	
 		
-		return 0
+		self.gbm.fit(self.X[200:400], self.Y[200:400])
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
+		r2 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
+		self.gbm.fit(self.X[400:600], self.Y[400:600])
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		y_pred_test = list( map( lambda p: self.rounder(p, 0.5) , y_pred_test ) )
+		r3 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
+
+		results = list()
+		results.append(r1)
+		results.append(r2)
+		results.append(r3)
+
+
+		return float(float(r1+r2+r3) / float(3.0))
 		
 
 

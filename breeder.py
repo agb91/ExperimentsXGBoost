@@ -1,3 +1,4 @@
+from  __future__ import division
 from gene import Gene
 from geneCreator import GeneCreator
 from titanic_boost_regressor import TitanicBoostRegressor
@@ -17,8 +18,8 @@ class Breeder:
 		strongestN = 3
 		if(n<3):
 			strongestN = n
-		reprods = math.ceil(n/2)
-		randomAdds = math.ceil(n/4) 
+		reprods = math.ceil(n/2.5)
+		randomAdds = 2 
 		goods = self.takeGoods( old , strongestN )
 		reproducible = self.takeGoods(old, reprods )
 		#I want to maintain old goods in my genetic pools
@@ -68,25 +69,26 @@ class Breeder:
 	def run(self, generation):
 		runnedGeneration = list()
 		dataReader = DataReader()
-		
+		X,Y,X_test,X_output = dataReader.readData()
 
 		
 		for i in range( 0 , len(generation)):
-			X,Y,X_test,X_output = dataReader.readData()
+			
 			thisGene = generation[i]
 			runner = TitanicBoostClassifier()	#just to initialize...
 			if( thisGene.way == 0 ):
 				runner = TitanicBoostClassifier()
-			if( thisGene.way == 1 ):
-				runner = TitanicBoostRegressor()
-			if( thisGene.way == 2 ):
-				runner = VariousForests()	
+			else:
+				if( thisGene.way == 1 ):
+					runner = TitanicBoostRegressor()
+				else:
+					runner = VariousForests()	
 
 			runner.setDatasets( X , Y , X_test , X_output )
 			runner.set_gene_to_model( thisGene )
 			thisGene.setFitnessLevel( runner.run() ) 
 			runnedGeneration.append(thisGene)
-			
+
 		return runnedGeneration	
 
 	def getFirstGeneration( self, n ):

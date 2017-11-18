@@ -11,8 +11,8 @@ from dataReader import DataReader
 
 if __name__ == "__main__":
   
-  population = 30
-  nGenerations = 6
+  population = 80
+  nGenerations = 15
 
   creator = GeneCreator()
   breeder = Breeder()
@@ -34,18 +34,20 @@ if __name__ == "__main__":
     best = breeder.takeBest( generation )
     #best.toStr()
     tot = 0
+    string_ways = str("")
     for k in range( 0, len(generation) ):
-      tot = tot + generation[i].level
+      string_ways += str( generation[k].way ) + str("-")
+      tot = tot + generation[k].level
 
-    print("we reach a correctness percentage of: " + str( best.level) )
+    print("we reach a correctness percentage of: " + str( best.level) +" using way: " + str( best.way ))
     print("we reach a medium result of: " + str( tot / len(generation)  ) )
-
+    print( "ways: " + str( string_ways ) )
   #nn = NeuralAbalone( confs )
   #loss = nn.run()
   print( "\n\n\n########################## IN THE END ##########################")
     
   print("we reach a correctness percentage of: " + str( best.level) + 
-    " using way: " + str( best.level ))
+    " using way: " + str( best.way ))
   print( best.toStr() )
 
 

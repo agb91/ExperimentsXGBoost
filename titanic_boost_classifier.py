@@ -78,12 +78,25 @@ class TitanicBoostClassifier:
 
 
 		self.gbm.fit(self.X[:200], self.Y[:200])
-
 		y_pred_test = self.gbm.predict(self.X[-200:])
 		y_real = self.Y[-200:]
-	
+		r1 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
 
-		return (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+		self.gbm.fit(self.X[200:400], self.Y[200:400])
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		r2 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
+		self.gbm.fit(self.X[400:600], self.Y[400:600])
+		y_pred_test = self.gbm.predict(self.X[-200:])
+		r3 = (float(np.sum(y_pred_test == y_real)) / float( len(y_pred_test) ))
+
+		results = list()
+		results.append(r1)
+		results.append(r2)
+		results.append(r3)
+
+
+		return float(float(r1+r2+r3) / float(3.0))
 
 
 
