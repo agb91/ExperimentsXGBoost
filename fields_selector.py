@@ -1,12 +1,12 @@
 from __future__ import division
 from gene import Gene
 import pandas as pd
-from geneCreator import GeneCreator
+from gene_creator import GeneCreator
 from breeder import Breeder
 from titanic_boost_regressor import TitanicBoostRegressor
 from titanic_boost_classifier import TitanicBoostClassifier
 from various_forests import VariousForests
-from dataReader import DataReader
+from data_reader import DataReader
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
@@ -24,7 +24,7 @@ class FieldsSelector:
 		self.X = X
 		self.Y = Y
 
-	def getFeatures( self ):
+	def get_features( self ):
 		clf = RandomForestClassifier(n_estimators=50, max_features='sqrt')
 		clf = clf.fit( self.X, self.Y )
 

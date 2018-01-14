@@ -4,41 +4,41 @@ import random
 
 class GeneCreator:
 	
-	def randomCol(self):
+	def random_col(self):
 		result = (random.random() / 2) + 0.5  # I wanna something in 0.5 - 1
 		return ( result )
 
-	def randomWay( self ):
+	def random_way( self ):
 		return ( random.randint(0,8) )
 
-	def randomSample(self):
+	def random_sample(self):
 		result = (random.random() / 2) + 0.5  # I wanna something in 0.5 - 1
 		return ( result )
 
-	def randomLearning(self):
+	def random_learning(self):
 		result = (random.random() / 600.0) + 0.01   # I wanna something around 0.01 - 0.2
 		return ( result )
 
 
-	def randomEstimators(self):
+	def random_estimators(self):
 		return ( random.randint(1,1000) )
 	
-	def randomDepthWeight(self):
+	def random_depth_weight(self):
 		return ( random.randint(3,7) )
 
-	def randomChildWeight(self):
+	def random_child_weight(self):
 		return ( random.randint(1,8) )	
 
-	def randomCreate(self):
+	def random_create(self):
 		
-		col_by_tree = self.randomCol()
-		subsample = self.randomSample()
-		min_child_weight = self.randomChildWeight()
-		max_depth = self.randomDepthWeight()
-		n_estimators = self.randomEstimators()
-		learning_rate = self.randomLearning()
-		way = self.randomWay()
-		n_neighbors = self.randomChildWeight()	
+		col_by_tree = self.random_col()
+		subsample = self.random_sample()
+		min_child_weight = self.random_child_weight()
+		max_depth = self.random_depth_weight()
+		n_estimators = self.random_estimators()
+		learning_rate = self.random_learning()
+		way = self.random_way()
+		n_neighbors = self.random_child_weight()	
 		gene = Gene( col_by_tree, subsample, min_child_weight, max_depth, n_estimators, 
 			learning_rate , way, n_neighbors)
 		return gene 	

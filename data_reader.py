@@ -170,7 +170,7 @@ class DataReader:
 
 		return features["feature"]
 
-	def readData(self):
+	def read_data(self):
 		le = LabelEncoder()
 		
 		path = "/home/andrea/Desktop/python/titanic/"

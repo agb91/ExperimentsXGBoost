@@ -53,7 +53,7 @@ class TitanicBoostClassifier:
 
 				
 
-	def setDatasets( self, X , Y , X_test , X_output ):
+	def set_datasets( self, X , Y , X_test , X_output ):
 		self.X = X
 		self.Y = Y
 		self.X_test = X_test
