@@ -15,13 +15,33 @@ from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_predict
 
+
+'''
+read the data form csv.
+this class should be a singleton in order to read the data only once and save them in a variable.
+all around the program the objects will be able to ask the data to the only instance of this class
+'''
+
 class DataReader:
+
+	__instance = None
+
+	X = None 
+	Y = None
+	X_test = None
+	X_output = None
 
 	def __init__( self  ):
 		pass
 
+	@staticmethod
+	def getInstance():
+		if DataReader.__instance == None:
+			DataReader.__instance = DataReader()
+		return DataReader.__instance
 
-
+	# in strings "is" is used for identity comparison, while "==" is used for equality comparison
+	# the title is statistically significant
 	def extract_name(self , name):
 		part = name.split(',')[1].split('.')[0].strip()
 
@@ -61,6 +81,7 @@ class DataReader:
 		else:
 			return ticket
 
+	# is this person part of the crew? (so is fare is 0.0)
 	def extract_crew( self, fare ):
 		if( float (fare) == 0.0  ):
 			return 1
@@ -110,8 +131,18 @@ class DataReader:
 		val = str(x)[:1]
 		return val	
 
+	def get_sex( self,x ):
+		if( x is not None and (x.lower() == "male" or x.lower() == "m") ):
+			return "m"
+		else:
+			return "f"	
+
+	'''
+	pd.get_dummies -> dummy columns seem to work better
+	'''
+
 	def manage_sex(self, train_valid):
-		train_valid['Sex'] = pd.Categorical.from_array(train_valid.Sex).codes
+		train_valid['Sex'] = train_valid['Sex'].apply(lambda x: self.get_sex(x) )
 		train_valid = pd.get_dummies(train_valid, columns = ["Sex"])
 		return train_valid		
 	
@@ -171,58 +202,65 @@ class DataReader:
 		return features["feature"]
 
 	def read_data(self):
-		le = LabelEncoder()
-		
-		path = "/home/andrea/Desktop/python/titanic/"
-		train_data = path + "train.csv"
-		test_data = path + "test.csv"
 
-		CSV_COLUMNS = [ "PassengerId","Survived","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
-		CSV_COLUMNS_TEST = [ "PassengerId","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
+		pd.set_option('mode.chained_assignment', None)
 
-		CSV_OUTPUT = ["PassengerId"]
+		# if the data are not already ridden let's find them and do some data wrangling
+		if (self.X == None or self.Y == None or self.X_test == None or self.X_output == None):
 
-		CSV_TARGET = ["Survived"]
-		
-		train_valid = shuffle( pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True) )
-		dataset_test = shuffle( pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True) )
-		
-		global_dataset = pd.concat( [train_valid, dataset_test] )
+			le = LabelEncoder()
+			
+			path = "data/"
+			train_data = path + "train.csv"
+			test_data = path + "test.csv"
 
-		global_dataset = self.manage_sex(global_dataset)
-		global_dataset = self.manage_cabin(global_dataset)
-		global_dataset = self.manage_name(global_dataset)
-		global_dataset = self.manage_ticket(global_dataset)
-		global_dataset = self.manage_age(global_dataset)
-		global_dataset = self.manage_embarked( global_dataset )
-		global_dataset = self.manage_crew( global_dataset )
-		global_dataset = self.manage_is_alone( global_dataset )
-		global_dataset = self.manage_parch( global_dataset )
-		global_dataset = self.manage_sibsp( global_dataset )
+			CSV_COLUMNS = [ "PassengerId","Survived","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
+			CSV_COLUMNS_TEST = [ "PassengerId","Pclass","Name","Sex","Age","SibSp","Parch","Ticket","Fare","Cabin","Embarked"]
+
+			CSV_OUTPUT = ["PassengerId"]
+
+			CSV_TARGET = ["Survived"]
+			
+			train_valid = shuffle( pd.read_csv( train_data, names=CSV_COLUMNS, header=0, skipinitialspace=True) )
+			dataset_test = shuffle( pd.read_csv( test_data, names=CSV_COLUMNS_TEST, header=0, skipinitialspace=True) )
+			
+			global_dataset = pd.concat( [train_valid, dataset_test], sort=False )
+
+			global_dataset = self.manage_sex(global_dataset)
+			global_dataset = self.manage_cabin(global_dataset)
+			global_dataset = self.manage_name(global_dataset)
+			global_dataset = self.manage_ticket(global_dataset)
+			global_dataset = self.manage_age(global_dataset)
+			global_dataset = self.manage_embarked( global_dataset )
+			global_dataset = self.manage_crew( global_dataset )
+			global_dataset = self.manage_is_alone( global_dataset )
+			global_dataset = self.manage_parch( global_dataset )
+			global_dataset = self.manage_sibsp( global_dataset )
 
 
 
-		global_dataset = global_dataset.groupby(global_dataset.columns, axis = 1).transform(
-			lambda x: x.fillna(x.median()))
+			#global_dataset = global_dataset.groupby(global_dataset.columns, axis = 1).transform(
+			#	lambda x: x.fillna(x.median()))
 
-		global_dataset["Age"] = global_dataset["Age"].fillna( global_dataset["Age"].mean() )
-		Y = train_valid[ CSV_TARGET ].values.ravel()
+			global_dataset["Age"] = global_dataset["Age"].fillna( global_dataset["Age"].mean() )
+			Y = train_valid[ CSV_TARGET ].values.ravel()
 
-		#print( global_dataset.columns.values )
+			#print( global_dataset.columns.values )
 
-		X = global_dataset.head( 891 )
-		X.drop("PassengerId", axis=1, inplace=True)
-		X.drop("Survived", axis=1, inplace=True)
-		
-		X_test = global_dataset.tail( 418 )
-		X_test.drop("Survived", axis=1, inplace=True)
+			X = global_dataset.head( 891 )
+			X.drop("PassengerId", axis=1, inplace=True)
+			X.drop("Survived", axis=1, inplace=True)
+			
+			X_test = global_dataset.tail( 418 )
+			X_test.drop("Survived", axis=1, inplace=True)
 
-		X_output = X_test[ CSV_OUTPUT ]
-		X_test.drop("PassengerId", axis=1, inplace=True)
-		
-		features = self.get_features( X , Y , 12)
-		X = X[ features ]
-		X_test = X_test[features]
+			X_output = X_test[ CSV_OUTPUT ]
+			X_test.drop("PassengerId", axis=1, inplace=True)
+			
+			features = self.get_features( X , Y , 12)
+			X = X[ features ]
+			X_test = X_test[features]
+
 		return X,Y,X_test,X_output
 		
 

@@ -54,7 +54,7 @@ class VariousForests:
 		random_state = 2
 		#kfold = StratifiedKFold(n_splits=5)
 		if( self.way == 2 ):
-			self.runner = SVC(random_state=random_state)
+			self.runner = SVC(random_state=random_state, gamma="auto")
 		
 		if( self.way == 3 ):
 			self.runner = DecisionTreeClassifier(max_depth = self.max_depth, random_state=random_state)

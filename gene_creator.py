@@ -2,21 +2,27 @@ from  __future__ import division
 from gene import Gene
 import random
 
+'''
+	the following class creates randomly a Gene that contains all the needed configurations.
+	Each attribute has a range that is limited. The limits are chosen by me according to my personal
+	experience 
+'''
+
 class GeneCreator:
 	
 	def random_col(self):
-		result = (random.random() / 2) + 0.5  # I wanna something in 0.5 - 1
+		result = (random.random() / 2) + 0.5  # I want something in the range 0.5 - 1
 		return ( result )
 
 	def random_way( self ):
 		return ( random.randint(0,8) )
 
 	def random_sample(self):
-		result = (random.random() / 2) + 0.5  # I wanna something in 0.5 - 1
+		result = (random.random() / 2) + 0.5  # I want something in the range 0.5 - 1
 		return ( result )
 
 	def random_learning(self):
-		result = (random.random() / 600.0) + 0.01   # I wanna something around 0.01 - 0.2
+		result = (random.random() / 600.0) + 0.01   # I want something in the range 0.01 - 0.2
 		return ( result )
 
 

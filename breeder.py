@@ -10,8 +10,16 @@ from data_reader import DataReader
 from various_forests import VariousForests
 
 
+'''
+how does a genetic algorithm work? 
+https://en.wikipedia.org/wiki/Genetic_algorithm
+'''
 class Breeder:
 
+	# create a new generation made of:
+	#	1) best elements of the old generation
+	#	2) new elements generated from the best old ones (sons)
+	#	3) some randome new elements, in order to add some variability
 	def get_new_generation( self, old, n):
 		gene_creator = GeneCreator()
 		new_generation = list()
@@ -35,8 +43,9 @@ class Breeder:
 		
 		return new_generation
 
+	# from parent genes (not necessarily 2 parents.. maybe more but at least 1) generate
+	# a new gene with attributes takan randomly from parents
 	def get_son( self, parents ):
-
 
 		cbti = random.randint(0, (len(parents) - 1 ) )
 		cbt = parents[cbti].col_by_tree 
@@ -66,31 +75,8 @@ class Breeder:
 		
 		return son	
 
-	def run(self, generation):
-		runned_generation = list()
-		data_reader = DataReader()
-		X,Y,X_test,X_output = data_reader.read_data()
-
 		
-		for i in range( 0 , len(generation)):
-			
-			this_gene = generation[i]
-			runner = TitanicBoostClassifier()	#just to initialize...
-			if( this_gene.way == 0 ):
-				runner = TitanicBoostClassifier()
-			else:
-				if( this_gene.way == 1 ):
-					runner = TitanicBoostRegressor()
-				else:
-					runner = VariousForests()	
-
-			runner.set_datasets( X , Y , X_test , X_output )
-			runner.set_gene_to_model( this_gene )
-			this_gene.set_fitness_level( runner.run() ) 
-			runned_generation.append(this_gene)
-
-		return runned_generation	
-
+	#the first is completely random..
 	def get_first_generation( self, n ):
 		genes = list()
 		creator = GeneCreator()
@@ -99,6 +85,7 @@ class Breeder:
 			genes.append(g)
 		return genes
 
+	#from the best to the worst, according to a fitness function able to evaluate the "level" of the gene
 	def order_genes( self , genes ):
 		result = []
 		genes_set = set(genes)
@@ -112,6 +99,7 @@ class Breeder:
 		
 		return result
 
+	# take the best N elements
 	def take_goods( self, genes, n ):
 		goods = []
 
@@ -126,15 +114,43 @@ class Breeder:
 		#	print( goods[i].level )		
 		return goods		    
 
+	#  take the best 1 element
 	def take_best( self, genes ):
+		return self.take_goods( genes, 1 )[0]
 
-		max_level = 0 #level of correctness percentage
-		best_gene = None
+	# run the algorithm itself
+	# generation is the population of genes in this iteration
+	def run(self, generation):
+		runned_generation = list()
+		data_reader = DataReader.getInstance()
+		X,Y,X_test,X_output = data_reader.read_data()
 
-		for i in range(0, len(genes) ):
-			g = genes[i]
-			if( g.level > max_level ):
-				best_gene = g
-				max_level = g.level
+		#for each gene of this generation
+		for i in range( 0 , len(generation)):
+			
+			this_gene = generation[i]
+			# runner is which algorithm will I use:
+			# 0 is XGBoost Classifier
+			# 1 is XGBoost regressor
+			# 2 is SVC
+			# 3 is DecisionTreeClassifier
+			# 4 is AdaBoost applied to DecisionTreeClassifier
+			# 5 is GradientBoosting
+			# 6 is KNeighbors
+			# 7 is RandomForest
+			# 8 is RandomForest but simplified (more defaults and less configuration)
+			runner = None
+			if( this_gene.way == 0 ):
+				runner = TitanicBoostClassifier()
+			else:
+				if( this_gene.way == 1 ):
+					runner = TitanicBoostRegressor()
+				else:
+					runner = VariousForests()	
 
-		return best_gene		
+			runner.set_datasets( X , Y , X_test , X_output )
+			runner.set_gene_to_model( this_gene ) #here we configure the model
+			this_gene.set_fitness_level( runner.run() ) 
+			runned_generation.append(this_gene)
+
+		return runned_generation
